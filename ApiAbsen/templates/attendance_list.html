@@ -1,0 +1,395 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Kehadiran & Anggota</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #e6f1ff;
+            overflow: hidden;
+            position: relative;
+        }
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-36.67,206.8-37.43C438.29,35.88,512.43,62.32,584,66.65c69.27,4.17,138.43-13.63,208-20.93,67.29-7.06,134.38,4.51,200,12.61C1057.62,66.43,1128.81,60,1200,60V0H0Z" fill="rgba(255,255,255,0.2)"/></svg>');
+            background-size: cover;
+            animation: waveAnimation 10s infinite linear;
+        }
+        @keyframes waveAnimation {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+        .container {
+            background: rgba(20, 30, 50, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 100, 0.2), inset 0 0 10px rgba(0, 255, 100, 0.1);
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(0, 255, 100, 0.3);
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0, 255, 100, 0.05);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 255, 100, 0.1);
+        }
+        h2 {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #00ff64;
+            text-shadow: 0 0 10px rgba(0, 255, 100, 0.7);
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 100, 0.2);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            color: #e6f1ff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        th {
+            background: rgba(0, 255, 100, 0.1);
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        img {
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0, 255, 100, 0.3);
+            max-width: 80px;
+        }
+        .scrollable {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #00ff64, #99ffcc);
+            color: #1e232d;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 100, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 100, 0.7);
+            background: linear-gradient(45deg, #00e65b, #b3ffd9);
+        }
+        button:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 10px rgba(0, 255, 100, 0.3);
+        }
+        .delete-btn, .edit-btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        .delete-btn {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+        }
+        .delete-btn:hover {
+            background: linear-gradient(45deg, #e63939, #ff5555);
+        }
+        .edit-btn {
+            background: linear-gradient(45deg, #ffa500, #ffcc66);
+        }
+        .edit-btn:hover {
+            background: linear-gradient(45deg, #ff8c00, #ffd699);
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        a {
+            text-decoration: none;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                background: none;
+                color: #000;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                background: none;
+            }
+            #personSection {
+                display: none;
+            }
+            table {
+                border: 1px solid #000;
+            }
+            th, td {
+                border: 1px solid #000;
+                color: #000;
+                text-shadow: none;
+            }
+            th {
+                background: #f0f0f0;
+            }
+            tr:nth-child(even) {
+                background: #fafafa;
+            }
+            img {
+                max-width: 100px;
+                border: 1px solid #000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wave"></div>
+    <div class="container">
+        <div class="section" id="attendanceSection">
+            <h2>Data Kehadiran</h2>
+            <div class="scrollable">
+                {% if attendances %}
+                    <table id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Nama Anggota</th>
+                                <th>Waktu</th>
+                                <th>Gambar Kehadiran</th>
+                                <th class="no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attendance in attendances %}
+                                <tr data-id="{{ attendance.id }}">
+                                    <td>{{ attendance.namaAnggota }}</td>
+                                    <td>{{ attendance.waktu|date:"d M Y, H:i" }}</td>
+                                    <td><img src="{{ attendance.gambarKehadiran.url }}" alt="{{ attendance.namaAnggota }}"></td>
+                                    <td class="no-print"><button class="delete-btn" onclick="deleteAttendance('{{ attendance.id }}')">Hapus</button></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Belum ada data kehadiran.</p>
+                {% endif %}
+            </div>
+            <div class="button-container no-print">
+                <button onclick="printAttendance()">
+                    <i class="fas fa-print"></i> Cetak Daftar Hadir
+                </button>
+            </div>
+        </div>
+
+        <div class="section" id="personSection">
+            <h2>Data Anggota</h2>
+            <div class="scrollable">
+                {% if persons %}
+                    <table id="personTable">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th>Alamat</th>
+                                <th>Gambar</th>
+                                <th class="no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for person in persons %}
+                                <tr data-id="{{ person.id }}">
+                                    <td>{{ person.nama }}</td>
+                                    <td>{{ person.jabatan }}</td>
+                                    <td>{{ person.alamat }}</td>
+                                    <td><img src="{{ person.gambar.url }}" alt="{{ person.nama }}"></td>
+                                    <td class="no-print">
+                                        <button class="edit-btn" onclick="editPerson('{{ person.id }}', '{{ person.nama }}', '{{ person.alamat }}', '{{ person.jabatan }}')">Edit</button>
+                                        <button class="delete-btn" onclick="deletePerson('{{ person.id }}')">Hapus</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Belum ada anggota terdaftar.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="button-container no-print">
+            <a href="{% url 'absen_page' %}"><button>Kembali ke Absen</button></a>
+            <a href="{% url 'capture_page' %}"><button>Tambah Data</button></a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function deleteAttendance(attendanceId) {
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: 'Apakah Anda yakin ingin menghapus data kehadiran ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff4444',
+                cancelButtonColor: '#00ff64',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("{% url 'delete_attendance' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ id: attendanceId })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            Swal.fire('Sukses', 'Data kehadiran berhasil dihapus!', 'success');
+                            document.querySelector(`#attendanceTable tr[data-id="${attendanceId}"]`).remove();
+                            if (!document.querySelector('#attendanceTable tbody tr')) {
+                                document.querySelector('#attendanceSection .scrollable').innerHTML = '<p>Belum ada data kehadiran.</p>';
+                            }
+                        } else {
+                            Swal.fire('Error', result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        Swal.fire('Error', 'Gagal menghapus data!', 'error');
+                    });
+                }
+            });
+        }
+
+        function deletePerson(personId) {
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: 'Apakah Anda yakin ingin menghapus data anggota ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff4444',
+                cancelButtonColor: '#00ff64',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("{% url 'delete_person' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ id: personId })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            Swal.fire('Sukses', 'Data anggota berhasil dihapus!', 'success');
+                            document.querySelector(`#personTable tr[data-id="${personId}"]`).remove();
+                            if (!document.querySelector('#personTable tbody tr')) {
+                                document.querySelector('#personSection .scrollable').innerHTML = '<p>Belum ada anggota terdaftar.</p>';
+                            }
+                        } else {
+                            Swal.fire('Error', result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        Swal.fire('Error', 'Gagal menghapus data!', 'error');
+                    });
+                }
+            });
+        }
+
+        function editPerson(personId, currentNama, currentAlamat, currentJabatan) {
+            Swal.fire({
+                title: 'Edit Data Anggota',
+                html: `
+                    <input id="swal-nama" class="swal2-input" value="${currentNama}" placeholder="Nama">
+                    <input id="swal-alamat" class="swal2-input" value="${currentAlamat}" placeholder="Alamat">
+                    <input id="swal-jabatan" class="swal2-input" value="${currentJabatan}" placeholder="Jabatan">
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#00ff64',
+                cancelButtonColor: '#ff4444',
+                preConfirm: () => {
+                    return {
+                        nama: document.getElementById('swal-nama').value,
+                        alamat: document.getElementById('swal-alamat').value,
+                        jabatan: document.getElementById('swal-jabatan').value
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { nama, alamat, jabatan } = result.value;
+                    fetch("{% url 'edit_person' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ id: personId, nama, alamat, jabatan })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            Swal.fire('Sukses', 'Data anggota berhasil diperbarui!', 'success');
+                            const row = document.querySelector(`#personTable tr[data-id="${personId}"]`);
+                            row.cells[0].textContent = nama;
+                            row.cells[1].textContent = jabatan;
+                            row.cells[2].textContent = alamat;
+                        } else {
+                            Swal.fire('Error', result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        Swal.fire('Error', 'Gagal memperbarui data!', 'error');
+                    });
+                }
+            });
+        }
+
+        function printAttendance() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

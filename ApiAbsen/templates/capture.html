@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistem Capture Wajah</title>
+    <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Efek ombak di background */
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-36.67,206.8-37.43C438.29,35.88,512.43,62.32,584,66.65c69.27,4.17,138.43-13.63,208-20.93,67.29-7.06,134.38,4.51,200,12.61C1057.62,66.43,1128.81,60,1200,60V0H0Z" fill="rgba(255,255,255,0.2)"/></svg>');
+            background-size: cover;
+            animation: waveAnimation 10s infinite linear;
+        }
+        @keyframes waveAnimation {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+        .container {
+            background: rgba(20, 30, 50, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h2 {
+            font-size: 2.2rem;
+            margin-bottom: 25px;
+            color: #e6f1ff;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        canvas {
+            border-radius: 15px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .form-group {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        input {
+            padding: 12px 20px;
+            margin: 0;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e6f1ff;
+            font-size: 1rem;
+            width: 180px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        input::placeholder {
+            color: rgba(230, 241, 255, 0.7);
+        }
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #00c4cc, #7dffa5);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin: 5px;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #00e6f6, #99ffcc);
+        }
+        button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wave"></div>
+    <div class="container">
+        <h2>TAMBAH DATA ABSEN</h2>
+        <canvas id="canvas" width="640" height="480"></canvas>
+        <canvas id="faceCanvas" width="200" height="200" style="display:none;"></canvas>
+        
+        <div class="form-group">
+            <input type="text" id="nama" placeholder="Nama">
+            <input type="text" id="alamat" placeholder="Alamat">
+            <input type="text" id="jabatan" placeholder="Jabatan">
+        </div>
+        
+        <button onclick="captureFace()">Capture Wajah</button>
+        <button onclick="trainFaces()">Train</button>
+        <a href="{% url 'absen_page' %}"><button>Halaman Absen</button></a>
+    </div>
+
+    <script>
+        let video = document.createElement("video");
+        let canvas = document.getElementById("canvas");
+        let faceCanvas = document.getElementById("faceCanvas");
+        let ctx = canvas.getContext("2d");
+        let faceCtx = faceCanvas.getContext("2d");
+        let classifier;
+
+        // Akses webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Error akses kamera: ", err);
+                alert("Gagal akses kamera!");
+            });
+
+        // Tunggu OpenCV.js siap
+        function onOpenCvReady() {
+            if (typeof cv === 'undefined' || !cv.Mat) {
+                setTimeout(onOpenCvReady, 100);
+                return;
+            }
+            console.log("OpenCV.js siap!");
+
+            fetch("{% static 'haarcascade_frontalface_default.xml' %}")
+                .then(response => {
+                    if (!response.ok) throw new Error("Gagal fetch cascade file");
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    let cascadeArray = new Uint8Array(data);
+                    cv.FS_createDataFile('/', 'haarcascade_frontalface_default.xml', cascadeArray, true, false, false);
+                    console.log("Cascade file created!");
+
+                    classifier = new cv.CascadeClassifier();
+                    if (!classifier.load('haarcascade_frontalface_default.xml')) {
+                        console.error("Gagal load cascade!");
+                        return;
+                    }
+                    console.log("Cascade loaded!");
+                    detectFaces();
+                })
+                .catch(err => {
+                    console.error("Error loading cascade:", err);
+                    alert("Gagal memuat file pendeteksi wajah!");
+                });
+        }
+
+        // Deteksi wajah real-time
+        function detectFaces() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            let src = cv.imread(canvas);
+            let gray = new cv.Mat();
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+            let faces = new cv.RectVector();
+            classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
+
+            for (let i = 0; i < faces.size(); i++) {
+                let face = faces.get(i);
+                let point1 = new cv.Point(face.x, face.y);
+                let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+                cv.rectangle(src, point1, point2, [255, 255, 255, 255], 2); /* Warna kotak jadi putih */
+            }
+
+            cv.imshow('canvas', src);
+            src.delete(); gray.delete(); faces.delete();
+
+            requestAnimationFrame(detectFaces);
+        }
+
+        // Capture wajah
+        function captureFace() {
+            let src = cv.imread(canvas);
+            let gray = new cv.Mat();
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+            let faces = new cv.RectVector();
+            classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
+
+            if (faces.size() > 0) {
+                let face = faces.get(0);
+                let faceRegion = src.roi(face);
+                cv.imshow('faceCanvas', faceRegion);
+
+                let nama = document.getElementById("nama").value;
+                let alamat = document.getElementById("alamat").value;
+                let jabatan = document.getElementById("jabatan").value;
+
+                let imageData = faceCanvas.toDataURL("image/jpeg");
+
+                let data = {
+                    nama: nama,
+                    alamat: alamat,
+                    jabatan: jabatan,
+                    image: imageData
+                };
+
+                fetch("{% url 'save_face' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    console.log("Sukses:", result);
+                    alert("Wajah berhasil disimpan!");
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Gagal menyimpan wajah!");
+                });
+
+                faceRegion.delete();
+            } else {
+                alert("Wajah tidak terdeteksi!");
+            }
+
+            src.delete(); gray.delete(); faces.delete();
+        }
+
+        // Train wajah
+        function trainFaces() {
+            fetch("{% url 'train_faces' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log("Training result:", result);
+                alert("Training selesai!");
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Gagal training!");
+            });
+        }
+
+        setTimeout(onOpenCvReady, 100);
+    </script>
+</body>
+</html>
