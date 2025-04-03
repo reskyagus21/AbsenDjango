@@ -53,6 +53,3 @@ A face recognition-based attendance system built with Django and the `face_recog
       + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 5. Run the server
    python manage.py runserver
-
-## Screenshot
-![Add Image]('Screenshot from 2025-04-03 17-21-57.png')        
