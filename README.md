@@ -25,17 +25,17 @@ A face recognition-based attendance system built with Django and the `face_recog
 4. In "List", edit/delete members, delete attendance records, or print the attendance list.
 
 ## Directory Structure
-face_attendance/
-├── face_app/
-│   ├── migrations/    # Database migrations
-│   ├── static/       # Static CSS, JS, and image files
-│   ├── templates/    # HTML templates (capture.html, absen.html, attendance_list.html)
-│   ├── models.py     # Person and Attendance models
-│   ├── urls.py       # Application routing
-│   └── views.py      # Backend logic
-├── media/            # Face images and attendance proof
-├── manage.py         # Django management script
-└── requirements.txt  # List of dependencies
+- ApiAbsen/
+- ├── Absen/
+- │   ├── migrations/    # Database migrations
+- │   ├── static/       # Static CSS, JS, and image files
+- │   ├── templates/    # HTML templates (capture.html, absen.html, attendance_list.html)
+- │   ├── models.py     # Person and Attendance models
+- │   ├── urls.py       # Application routing
+- │   └── views.py      # Backend logic
+- ├── media/            # Face images and attendance proof
+- ├── manage.py         # Django management script
+- └── requirements.txt  # List of dependencies
 
 ## How To Run Project
 1. pip install -r requirements.txt
