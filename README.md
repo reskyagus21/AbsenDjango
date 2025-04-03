@@ -55,4 +55,4 @@ A face recognition-based attendance system built with Django and the `face_recog
    python manage.py runserver
 
 ## Screenshot
-!Add Image(Screenshot from 2025-04-03 17-21-57.png)        
+![Add Image]('Screenshot from 2025-04-03 17-21-57.png')        
